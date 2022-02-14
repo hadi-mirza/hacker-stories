@@ -1,10 +1,15 @@
 import * as React from "react";
+import react from "react";
 import "./App.css";
+
+// Custom hook
 
 const useSemiPersistentState = (key, initialState) => {
   const [value, setValue] = React.useState(
     localStorage.getItem(key) || initialState
   );
+
+  // Load on initial render and whenever key and value get updated
 
   React.useEffect(() => {
     localStorage.setItem(key, value);
@@ -33,8 +38,21 @@ const App = () => {
     },
   ];
 
+  React.useEffect(() => {
+    getAsyncStories().then((result) => {
+      setStories(result.data.stories);
+    });
+  }, []);
+
   const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
-  const [stories, setStories] = React.useState(initialStories);
+  const [stories, setStories] = React.useState([]);
+
+  const getAsyncStories = () =>
+    new Promise((resolve) =>
+      setTimeout(() => resolve({ data: { stories: initialStories } }), 2000)
+    );
+
+  console.log(getAsyncStories());
 
   const handleRemoveStory = (item) => {
     const newStories = stories.filter(
