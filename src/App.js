@@ -3,6 +3,7 @@ import styles from "./App.module.css";
 import axios from "axios";
 // import cs from "classnames";
 import styled from "styled-components";
+import { ReactComponent as Check } from "./check.svg";
 
 // Styled Components
 
@@ -57,6 +58,13 @@ const StyledButton = styled.button`
 
 const StyledButtonSmall = styled(StyledButton)`
   padding: 5px;
+
+  transition: all 0.1s ease-in;
+
+  &:hover > svg {
+    fill: #ffffff;
+    stroke: #ffffff;
+  }
 `;
 const StyledButtonLarge = styled(StyledButton)`
   padding: 10px;
@@ -84,6 +92,8 @@ const StyledLabel = styled.label`
 // Custom hook
 
 const useSemiPersistentState = (key, initialState) => {
+  const isMounted = React.useRef(false);
+
   const [value, setValue] = React.useState(
     localStorage.getItem(key) || initialState
   );
@@ -91,7 +101,12 @@ const useSemiPersistentState = (key, initialState) => {
   // Load on initial render and whenever key and value get updated
 
   React.useEffect(() => {
-    localStorage.setItem(key, value);
+    if (!isMounted.current) {
+      isMounted.current = true;
+    } else {
+      console.log("A");
+      localStorage.setItem(key, value);
+    }
   }, [value, key]);
 
   return [value, setValue];
@@ -162,12 +177,12 @@ const App = () => {
     handleFetchStories();
   }, [handleFetchStories]);
 
-  const handleRemoveStory = (item) => {
+  const handleRemoveStory = React.useCallback((item) => {
     dispatchStories({
       type: "REMOVE_STORY",
       payload: item,
     });
-  };
+  }, []);
 
   const handleSearchInput = (event) => {
     setSearchTerm(event.target.value);
@@ -178,6 +193,8 @@ const App = () => {
 
     event.preventDefault();
   };
+
+  console.log("B:App");
 
   return (
     <StyledContainer>
@@ -232,15 +249,16 @@ const InputWithLabel = ({
   );
 };
 
-const List = ({ list, onRemoveItem }) => {
-  return (
-    <ul>
-      {list.map((item) => (
-        <Item key={item.objectID} onRemoveItem={onRemoveItem} item={item} />
-      ))}
-    </ul>
-  );
-};
+const List = React.memo(
+  ({ list, onRemoveItem }) =>
+    console.log("B:List") || (
+      <ul>
+        {list.map((item) => (
+          <Item key={item.objectID} onRemoveItem={onRemoveItem} item={item} />
+        ))}
+      </ul>
+    )
+);
 
 const Item = ({ item, onRemoveItem }) => (
   <StyledItem>
@@ -252,7 +270,7 @@ const Item = ({ item, onRemoveItem }) => (
     <StyledColumn width="10%">{item.points}</StyledColumn>
     <StyledColumn width="10%">
       <StyledButtonSmall type="button" onClick={() => onRemoveItem(item)}>
-        Dismiss
+        <Check height="18px" width="18px" />
       </StyledButtonSmall>
     </StyledColumn>
   </StyledItem>
